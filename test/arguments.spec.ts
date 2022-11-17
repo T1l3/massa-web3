@@ -44,18 +44,41 @@ describe("Args class", () => {
     });
 
     it("with string", () => {
-        const valueA = "a".repeat(13)
+        const valueA = "a".repeat(13);
         const args1 = new Args();
         args1.addString(valueA);
         const byteString = args1.serialize();
         const args2 = new Args(byteString);
         expect(args2.nextString()).to.equal(valueA);
 
-        const valueB = "b".repeat(65600)
+        const valueB = "b".repeat(65600);
         const args3 = new Args();
         args3.addString(valueB);
         const byteString2 = args3.serialize();
         const args4 = new Args(byteString2);
         expect(args4.nextString()).to.equal(valueB);
     });
+
+    it("with u64 and string", () => {
+        const valueA = "a".repeat(13);
+        const args1 = new Args();
+        args1
+        .addU64(BigInt(97))
+        .addString(valueA);
+        const byteString = args1.serialize();
+        const args2 = new Args(byteString);
+        expect(args2.nextU64()).to.equal(BigInt(97));
+        expect(args2.nextString()).to.equal(valueA);
+
+        const valueB = "b".repeat(65600);
+        const args3 = new Args();
+        args3
+        .addU64(BigInt(113))
+        .addString(valueB);
+        const byteString2 = args3.serialize();
+        const args4 = new Args(byteString2);
+        expect(args4.nextU64()).to.equal(BigInt(113));
+        expect(args4.nextString()).to.equal(valueB);
+    });
+
 });

@@ -57,7 +57,7 @@ export default class Args {
     let value = BigInt(0);
 
     // encoding is little endian
-    for (let i = numBytes-1; i > 0; --i) {
+    for (let i = numBytes - 1; i > 0; --i) {
       value = (value | BigInt(byteArray[this.offset + i])) << BigInt(8);
     }
 
@@ -67,6 +67,32 @@ export default class Args {
     return value;
   }
 
+  /**
+   * Returns the deserialized number.
+   *
+   * @return {BigInt}
+   */
+     nextU64(): BigInt {
+      const byteArray = this.fromByteString(this.serialized);
+
+     const numBytes = 8;
+      if (byteArray.length - this.offset < numBytes) {
+        return BigInt(0);
+      }
+
+      let value = BigInt(0);
+
+      // encoding is little endian
+      for (let i = numBytes - 1; i > 0; --i) {
+        value = (value | BigInt(byteArray[this.offset + i])) << BigInt(8);
+      }
+
+      value = value | BigInt(byteArray[this.offset]);
+      this.offset += numBytes;
+
+      return value;
+    }
+
   // Setter
 
   /**
@@ -74,9 +100,29 @@ export default class Args {
    * @param {BigInt} bigInt
    * @return {Args}
    */
-  addU32(bigInt): Args {
+  addU32(bigInt: bigint): Args {
     const u32 = BigInt.asUintN(/* num of significant bits */ 32, bigInt);
     const byteArray = new Uint8Array(4);
+    const byteMask = BigInt(0xff); // extracts all the bits of a given byte
+    for (let i = 0; i < byteArray.length; i++) {
+      // extracts the value of the first, second, third or forth byte by moving the mask
+      const targetByte = u32 & (byteMask << BigInt(8 * i));
+      // reduces the extracted value to targeted byte by removing lower masked bytes
+      const byte = targetByte >> BigInt(8 * i);
+      byteArray[i] = Number(byte);
+    }
+
+    this.serialized = this.serialized.concat(this.toByteString(byteArray));
+
+    return this;
+  }
+
+  /**
+   * Add u64 to the serialized byte string.
+   */
+  addU64(bigInt: bigint): Args {
+    const u32 = BigInt.asUintN(/* num of significant bits */ 64, bigInt);
+    const byteArray = new Uint8Array(8);
     const byteMask = BigInt(0xff); // extracts all the bits of a given byte
     for (let i = 0; i < byteArray.length; i++) {
       // extracts the value of the first, second, third or forth byte by moving the mask
